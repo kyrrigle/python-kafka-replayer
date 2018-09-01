@@ -116,11 +116,11 @@ class KafkaReplayer(object):
         """
         if start_time < 0:
             raise ValueError('start_time must be non-negative')
-        if end_time < 0:
+        if end_time and end_time < 0:
             raise ValueError('end_time must be non-negative')
         if start_time > self._get_time_millis():
             raise ValueError('start_time must not be in the future')
-        if start_time > end_time:
+        if end_time and start_time > end_time:
             raise ValueError('end_time must be at least start_time')
         count = 0
         last_timestamp = 0
@@ -140,7 +140,7 @@ class KafkaReplayer(object):
                     partitions = set()
                 else:
                     last_timestamp = record.timestamp
-                    if last_timestamp > end_time:
+                    if end_time and last_timestamp > end_time:
                         # Since partitions are ordered, if we see a too-new timestamp, mark the
                         # partition complete.
                         partitions.discard(record.partition)
@@ -149,7 +149,7 @@ class KafkaReplayer(object):
                             consumer.pause(tp)
                             self._logger.debug('Completed partition {0}'.format(tp))
                     elif (record.partition in partitions and last_timestamp >= start_time
-                          and last_timestamp <= end_time):
+                          and (not end_time or last_timestamp <= end_time)):
                         # Send the record to the client if it's within the specified time range
                         yield record
                     count += 1
@@ -162,4 +162,3 @@ class KafkaReplayer(object):
             self._logger.info('Processed {0} offsets, last timestamp: {1}'.format(
                 count, last_timestamp))
             consumer.close()
-
