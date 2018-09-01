@@ -101,12 +101,12 @@ class KafkaReplayer(object):
                 return self._binary_search(consumer, tp, start, insertion_point, target_time)
         return start
 
-    def replay(self, start_time, end_time):
+    def replay(self, start_time, end_time=None):
         """Replay all specified partitions over the specified time range (inclusive).
 
         Args:
             start_time: The start timestamp in milliseconds
-            end_time: The end timestamp in milliseconds
+            end_time: The end timestamp in milliseconds or None for open ended range
 
         Yields:
             The next ConsumerRecord found within the given time range
